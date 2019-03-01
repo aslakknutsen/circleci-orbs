@@ -1,0 +1,61 @@
+version: 2.1
+description: "A collection of orbs for testing Ike with Maistra(Openshift) on a CircleCI machine"
+commands:
+  docker_insecure_registry:
+    description: |
+      "Allows docker daemon to use insecure registries"
+    steps:
+      - run:
+          name: "Allows docker daemon to use insecure registries"
+          command: |
+            json=`mktemp`
+            echo '{ "insecure-registries": [ "172.30.0.0/16", "registry.access.redhat.com" ] }' > ${json}
+            sudo mv ${json} /etc/docker/daemon.json
+            sudo service docker restart
+            echo "Configured Docker daemon with insecure-registry"
+  install_maistra:
+    description: |
+      Installs Maistra 0.8.0 (based on OKD 3.11 cluster) on the vm's machine.
+    steps:
+      - run:
+          name: "Installing Maistra Cluster v3.11.0_maistra-0.8.0 "
+          command: |
+            cd ~
+            kube_version=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/${kube_version}/bin/linux/amd64/kubectl && \
+            chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            echo "  Installed kubectl"
+
+            curl -LO https://github.com/Maistra/origin/releases/download/v3.11.0%2Bmaistra-0.8.0/istiooc_linux && \
+            chmod +x $PWD/istiooc_linux && mv $PWD/istiooc_linux $PWD/istiooc && sudo mv $PWD/istiooc /usr/local/bin/ && \
+            sudo cp /usr/local/bin/istiooc /usr/local/bin/oc
+            istiooc version
+            oc version
+
+            oc cluster up
+            sleep 10
+            oc login -u system:admin
+            oc adm policy add-cluster-role-to-user cluster-admin admin
+            oc login -u developer
+            echo "Configured Maistra cluster v3.11.0_maistra-0.8.0"
+  install_telepresence:
+    description: |
+      Installs Telepresence 0.97 (together with python3)
+    steps:
+      - run:
+          name: "Installing Prerequisites (telepresence)"
+          command: |
+            cd ~
+            pyenv global 3.5.2
+            curl -s https://packagecloud.io/install/repositories/datawireio/telepresence/script.deb.sh | sudo bash
+            sudo apt install --no-install-recommends telepresence
+            telepresence --version
+  update_golang:
+    description: |
+      Updates golang to 1.12
+    steps:
+      - run:
+          name: "Updating golang to 1.12"
+          command: |
+            sudo rm -rf /usr/local/go
+            sudo circleci-install golang 1.12
