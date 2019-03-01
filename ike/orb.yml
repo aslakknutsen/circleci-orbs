@@ -6,7 +6,7 @@ commands:
       "Allows docker daemon to use insecure registries"
     steps:
       - run:
-          name: "Allows docker daemon to use insecure registries"
+          name: "Configuring docker daemon to use insecure registries"
           command: |
             json=`mktemp`
             echo '{ "insecure-registries": [ "172.30.0.0/16", "registry.access.redhat.com" ] }' > ${json}
@@ -38,7 +38,7 @@ commands:
       Installs Telepresence 0.97 (together with python3)
     steps:
       - run:
-          name: "Installing Prerequisites (telepresence)"
+          name: "Installing telepresence.io"
           command: |
             cd ~
             pyenv global 3.5.2
