@@ -32,11 +32,6 @@ commands:
             istiooc version
             oc version
 
-            oc cluster up
-            sleep 10
-            oc login -u system:admin
-            oc adm policy add-cluster-role-to-user cluster-admin admin
-            oc login -u developer
             echo "Configured Maistra cluster v3.11.0_maistra-0.8.0"
   install_telepresence:
     description: |
